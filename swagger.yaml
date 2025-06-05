@@ -1,0 +1,26 @@
+
+openapi: 3.0.0
+info:
+  title: API VTPR
+  version: 1.0.0
+servers:
+  - url: https://192.168.1.16:2900/rest/APIVTPR
+paths:
+  /vendedores:
+    get:
+      summary: Lista de vendedores
+      responses:
+        '200':
+          description: Lista de vendedores retornada com sucesso
+  /VALIDACPF:
+    get:
+      summary: Valida CPF
+      parameters:
+        - name: CPF
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Status do CPF
