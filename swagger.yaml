@@ -1,26 +1,177 @@
-
-openapi: 3.0.0
+openapi: 3.0.3
 info:
   title: API VTPR
+  description: API REST para operações de manutenção, geração de títulos, consulta de vendedores, produtos, validação de CPF, e faixas de produtos.
   version: 1.0.0
 servers:
   - url: https://192.168.1.16:2900/rest/APIVTPR
 paths:
-  /vendedores:
-    get:
-      summary: Lista de vendedores
-      responses:
-        '200':
-          description: Lista de vendedores retornada com sucesso
-  /VALIDACPF:
-    get:
-      summary: Valida CPF
+  /MANUTENCAO/PLANO:
+    post:
+      summary: Bloquear ou desbloquear beneficiários
       parameters:
-        - name: CPF
-          in: query
-          required: true
+        - in: header
+          name: tenantid
           schema:
             type: string
+          required: true
+          example: "12,01"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                cMOV:
+                  type: string
+                  description: "2 = Bloqueio, 4 = Desbloqueio"
+                cTOKEN:
+                  type: string
+                cMODO:
+                  type: string
+                  description: "2 = Bloqueio pessoa, 4 = Bloqueio família"
+                cDATAPAGAMENTO:
+                  type: string
+                cCODBLOQ:
+                  type: string
+              required: [cMOV, cTOKEN, cMODO, cDATAPAGAMENTO, cCODBLOQ]
+      responses:
+        '200':
+          description: Sucesso ou erro da operação
+          content:
+            application/json:
+              schema:
+                type: object
+  /GERATITULO:
+    post:
+      summary: Gerar título de cobrança
+      parameters:
+        - in: header
+          name: tenantid
+          schema:
+            type: string
+          required: true
+          example: "12,01"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                OPERACAO:
+                  type: string
+                  example: "3"
+                TOKEN:
+                  type: string
+              required: [OPERACAO, TOKEN]
+      responses:
+        '200':
+          description: Sucesso ou erro da operação
+          content:
+            application/json:
+              schema:
+                type: object
+  /vendedores:
+    get:
+      summary: Retorna lista de vendedores
+      parameters:
+        - in: header
+          name: tenantid
+          schema:
+            type: string
+          required: true
+          example: "12,01"
+      responses:
+        '200':
+          description: Lista de vendedores
+          content:
+            application/json:
+              schema:
+                type: object
+  /EQUIPEXVENDEDORES:
+    get:
+      summary: Retorna equipes e seus respectivos vendedores
+      parameters:
+        - in: header
+          name: tenantid
+          schema:
+            type: string
+          required: true
+          example: "12,01"
+      responses:
+        '200':
+          description: Lista de equipes e vendedores
+          content:
+            application/json:
+              schema:
+                type: object
+  /VALIDACPF:
+    get:
+      summary: Valida se o CPF já possui produto
+      parameters:
+        - in: header
+          name: tenantid
+          schema:
+            type: string
+          required: true
+          example: "12,01"
+        - in: query
+          name: CPF
+          schema:
+            type: string
+          required: true
       responses:
         '200':
           description: Status do CPF
+          content:
+            application/json:
+              schema:
+                type: object
+  /PRODUTOLISTA:
+    get:
+      summary: Lista de produtos disponíveis
+      parameters:
+        - in: header
+          name: tenantid
+          schema:
+            type: string
+          required: true
+          example: "12,01"
+      responses:
+        '200':
+          description: Lista de produtos
+          content:
+            application/json:
+              schema:
+                type: object
+  /PRODFAIXALISTA:
+    get:
+      summary: Lista de faixas do produto
+      parameters:
+        - in: header
+          name: tenantid
+          schema:
+            type: string
+          required: true
+          example: "12,01"
+        - in: query
+          name: cPRODUTO
+          schema:
+            type: string
+          required: true
+      responses:
+        '200':
+          description: Lista de faixas
+          content:
+            application/json:
+              schema:
+                type: object
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+security:
+  - basicAuth: []
