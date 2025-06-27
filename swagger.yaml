@@ -1,0 +1,822 @@
+---
+openapi: 3.0.0
+info:
+  title: API para Acesso de dados do APP Helpmovel
+  description: Documentacao da API RESTful definida no arquivo appservice.prw para acesso a dados do aplicativo Helpmovel, extraida do codigo-fonte Protheus (AdvPL).
+  version: 1.0.0
+servers:
+  - url: http://helpmovel173800.protheus.cloudtotvs.com.br:1607/rest/appService
+    description: Servidor do AppService
+    
+security:
+  - basicAuth: []
+components:
+  securitySchemes:
+    basicAuth:
+      type: http
+      scheme: basic
+      description: Autenticacao basica usando nome de utilizador e senha
+paths:
+
+
+  /ConfirmaMatanteAtiva/:
+    get:
+      summary: Confirma Matante Ativa
+      description: Verifica se uma determinada matante (codigo de matricula anterior) esta ativa para uma cidade especifica.
+      tags:
+        - Verificacoes
+      parameters:
+        - name: CIDADE
+          in: query
+          required: true
+          description: Identificador da cidade.
+          schema:
+            type: string
+            example: "LIMEIRA"
+        - name: MATANTE
+          in: query
+          required: true
+          description: Codigo da matante (matricula anterior) a ser verificada.
+          schema:
+            type: string
+            example: "MAT12345"
+      responses:
+        200:
+          description: Sucesso. Retorna a quantidade de registros encontrados para a matante ativa.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Confirma:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        QTD:
+                          type: integer
+                          description: Quantidade de registros encontrados (geralmente 1 se ativa, 0 se inativa).
+                          example: 1
+        400:
+          description: Erro na requisicao.
+        500:
+          description: Erro interno do servidor.
+  /AssociadosClienteFinanceiro/:
+    get:
+      summary: Lista Associados por Cliente Financeiro
+      description: Retorna a lista de associados vinculados a um cliente financeiro (identificado pelo CPF) em uma cidade.
+      tags:
+        - Associados
+      parameters:
+        - name: CIDADE
+          in: query
+          required: true
+          description: Identificador da cidade.
+          schema:
+            type: string
+            example: "RIOCLARO"
+        - name: CPFUSR
+          in: query
+          required: true
+          description: CPF do usuario (cliente financeiro) para buscar os associados vinculados.
+          schema:
+            type: string
+            format: cpf
+            example: "12345678900"
+      responses:
+        200: 
+          description: Sucesso. Retorna um array com os dados dos associados.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Associados:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        MATRICULA:
+                          type: string
+                          description: "Matricula do associado"
+                        NOME:
+                          type: string
+                          description: "Nome do associado"
+        400: 
+          description: Erro na requisicao.
+        500: 
+          description: Erro interno do servidor.
+
+
+
+  /DadosAssociado/:
+    get:
+      summary: Obtem Dados Detalhados do Associado
+      description: Retorna informacoes detalhadas de um associado especifico.
+      tags:
+        - Associados
+      parameters:
+        - name: CIDADE
+          in: query
+          required: true
+          description: Identificador da cidade.
+          schema:
+            type: string
+            example: "PIRACICABA"
+        - name: CPFUSR # Ou MATRICULA?
+          in: query
+          required: true
+          description: CPF do usuario principal ou matricula do associado especifico.
+          schema:
+            type: string
+            example: "11122233344"
+      responses:
+        200:
+          description: Sucesso. Retorna um objeto com os dados do associado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  DadosAssociado:
+                    type: object
+                    properties:
+                      NOME:
+                        type: string
+                      CPF:
+                        type: string
+                        format: cpf
+                      ENDERECO:
+                        type: string
+                      # Outros campos relevantes
+        400:
+          description: Erro na requisicao (associado nao encontrado).
+        500:
+          description: Erro interno do servidor.
+
+
+
+  /ListarCarteirinha/:
+    get:
+      summary: Lista Carteirinhas do Associado
+      description: Retorna os dados das carteirinhas associadas a um cliente financeiro.
+      tags:
+        - Associados
+        - Carteirinha
+      parameters:
+        - name: CIDADE
+          in: query
+          required: true
+          description: Identificador da cidade.
+          schema:
+            type: string
+            example: "ASBONO"
+        - name: CPFUSR
+          in: query
+          required: true
+          description: CPF do usuario principal ou matricula do associado.
+          schema:
+            type: string
+            example: "98765432100"
+      responses:
+        200:
+          description: Sucesso. Retorna uma lista de carteirinhas.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Carteirinhas:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        NUMERO_CARTEIRINHA:
+                          type: string
+                        VALIDADE:
+                          type: string
+                          format: date
+                        TIPO_PLANO:
+                          type: string
+                        # Outros campos relevantes
+        400:
+          description: Erro na requisicao.
+        500:
+          description: Erro interno do servidor.
+
+
+
+  /Produtos/:
+    get:
+      summary: Lista Produtos
+      description: Retorna a lista de produtos disponiveis ou filtra por codigo.
+      tags:
+        - Produtos
+      parameters:
+        - name: CIDADE
+          in: query
+          required: true
+          description: Identificador da cidade.
+          schema:
+            type: string
+            example: "LIMEIRA"
+        - name: CODPRO
+          in: query
+          required: false # Parametro opcional para filtrar
+          description: Codigo do produto para filtrar a lista (opcional).
+          schema:
+            type: string
+            example: "PROD001"
+      responses:
+        200:
+          description: Sucesso. Retorna a lista de produtos.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Produtos:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        CODIGO:
+                          type: string
+                        DESCRICAO:
+                          type: string
+                        PRECO:
+                          type: number
+                          format: float
+                        # Outros campos relevantes
+        400:
+          description: Erro na requisicao.
+        500:
+          description: Erro interno do servidor.
+
+
+
+  /VerificarAssoc/:
+    get:
+      summary: Verifica Status do Associado
+      description: Verifica a situacao de um associado especifico usando seus identificadores.
+      tags:
+        - Associados
+        - Verificacoes
+      parameters:
+        - name: CIDADE
+          in: query
+          required: true
+          description: Identificador da cidade.
+          schema:
+            type: string
+            example: "RIOCLARO"
+        - name: CODINT
+          in: query
+          required: true
+          description: Codigo interno do associado.
+          schema:
+            type: string
+            example: "0001"
+        - name: CODEMP
+          in: query
+          required: true
+          description: Codigo da empresa do associado.
+          schema:
+            type: string
+            example: "0001"
+        - name: MATRIC
+          in: query
+          required: true
+          description: Matricula do associado (sem tipo e digito).
+          schema:
+            type: string
+            example: "123456"
+        - name: TIPREG
+          in: query
+          required: true
+          description: Tipo de registro do associado.
+          schema:
+            type: string
+            example: "01"
+      responses:
+        200:
+          description: Sucesso. Retorna dados da verificacao.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Status:
+                    type: string
+                    example: "ATIVO"
+        400:
+          description: Erro na requisicao (associado nao encontrado).
+        500:
+          description: Erro interno do servidor.
+
+
+
+
+  /Autentica/:
+    get:
+      summary: Autentica Usuario (Login)
+      description: Verifica as credenciais (CPF e Senha) de um usuario para autenticacao no APP.
+      tags:
+        - Autenticacao
+      parameters:
+        - name: CIDADE
+          in: query
+          required: true
+          description: Identificador da cidade.
+          schema:
+            type: string
+            example: "PIRACICABA"
+        - name: CPFUSR
+          in: query
+          required: true
+          description: CPF do usuario.
+          schema:
+            type: string
+            pattern: '^\d{11}$'
+            example: "12345678900"
+        - name: USRSENHA
+          in: query
+          required: true
+          description: Senha do usuario.
+          schema:
+            type: string
+            format: password
+            example: "senha123"
+      responses:
+        200:
+          description: Autenticacao bem-sucedida. Retorna dados do usuario autenticado.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: "Token de sessao (se aplicavel)"
+                  usuario:
+                    type: object
+                    properties:
+                      NOME:
+                        type: string
+                      EMAIL:
+                        type: string
+                        format: email
+        401:
+          description: Nao autorizado. Credenciais invalidas.
+        400:
+          description: Erro na requisicao.
+        500:
+          description: Erro interno do servidor.
+
+
+
+  /DemonstrativoFinanceiro/:
+    get:
+      summary: Obtem Demonstrativo Financeiro do Associado
+      description: Retorna o demonstrativo financeiro para um associado especifico.
+      tags:
+        - Financeiro
+        - Associados
+      parameters:
+        - name: CIDADE
+          in: query
+          required: true
+          description: Identificador da cidade.
+          schema:
+            type: string
+            example: "ASBONO"
+        - name: CODINT
+          in: query
+          required: true
+          description: Codigo interno do associado.
+          schema:
+            type: string
+            example: "0002"
+        - name: CODEMP
+          in: query
+          required: true
+          description: Codigo da empresa do associado.
+          schema:
+            type: string
+            example: "0001"
+        - name: MATRIC
+          in: query
+          required: true
+          description: Matricula do associado.
+          schema:
+            type: string
+            example: "654321"
+        - name: TIPREG
+          in: query
+          required: true
+          description: Tipo de registro do associado.
+          schema:
+            type: string
+            example: "02"
+      responses:
+        200:
+          description: Sucesso. Retorna os dados do demonstrativo financeiro.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  saldo_atual:
+                    type: number
+                    format: float
+                  ultimas_transacoes:
+                    type: array
+                    items:
+                      type: object
+                      properties: {}
+        400:
+          description: Erro na requisicao (ex associado nao encontrado).
+        500:
+          description: Erro interno do servidor.
+
+
+
+  /InserirUsuario/:
+    post:
+      summary: Insere Novo Usuario
+      description: Cria um novo registro de usuario no sistema.
+      tags:
+        - Usuarios
+      parameters:
+        - name: CIDADE
+          in: query
+          required: true
+          description: Identificador da cidade onde o usuario sera criado.
+          schema:
+            type: string
+            example: "LIMEIRA"
+      requestBody:
+        description: Dados do novo usuario a ser inserido.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                CPFUSR:
+                  type: string
+                  format: cpf
+                  description: CPF do novo usuario.
+                  example: "11122233344"
+                EMAIL:
+                  type: string
+                  format: email
+                  description: Email do novo usuario.
+                  example: "novo.usuario@email.com"
+                USRSENHA:
+                  type: string
+                  format: password
+                  description: Senha para o novo usuario.
+                  example: "senhaForte123"
+                NOME:
+                  type: string
+                  description: Nome completo do usuario.
+                  example: "Nome Sobrenome"
+              required:
+                - CPFUSR
+                - EMAIL
+                - USRSENHA
+                - NOME
+      responses:
+        201:
+          description: Usuario criado com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id_usuario:
+                    type: string
+                    description: "ID ou CPF do usuario criado"
+                  mensagem:
+                    type: string
+                    example: "Usuario criado com sucesso."
+        400:
+          description: Erro na requisicao (ex dados invalidos, CPF/Email ja cadastrado).
+        500:
+          description: Erro interno do servidor.
+
+
+
+  /AlterarUsuario/:
+    post:
+      summary: Altera Senha do Usuario
+      description: Permite que um usuario altere sua propria senha.
+      tags:
+        - Usuarios
+      parameters:
+        - name: CIDADE
+          in: query
+          required: true
+          description: Identificador da cidade.
+          schema:
+            type: string
+            example: "RIOCLARO"
+      requestBody:
+        description: Dados necessarios para a alteracao de senha.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                CPFUSR:
+                  type: string
+                  format: cpf
+                  description: CPF do usuario cuja senha sera alterada.
+                  example: "12345678900"
+                EMAIL:
+                  type: string
+                  format: email
+                  description: Email do usuario (para confirmacao).
+                  example: "usuario.existente@email.com"
+                USRSENHA_ANTIGA:
+                  type: string
+                  format: password
+                  description: Senha atual do usuario.
+                  example: "senhaAntiga456"
+                USRSENHA_NOVA:
+                  type: string
+                  format: password
+                  description: Nova senha desejada.
+                  example: "novaSenhaSegura789"
+              required:
+                - CPFUSR
+                - EMAIL
+                - USRSENHA_ANTIGA
+                - USRSENHA_NOVA
+      responses:
+        200:
+          description: Senha alterada com sucesso.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensagem:
+                    type: string
+                    example: "Senha alterada com sucesso."
+        400:
+          description: Erro na requisicao (ex dados invalidos, senha antiga incorreta).
+        401:
+          description: Nao autorizado (ex tentativa de alterar senha de outro usuario).
+        404:
+          description: Usuario nao encontrado.
+        500:
+          description: Erro interno do servidor.
+
+
+
+  /ValidaUser/:
+    get:
+      summary: Valida Usuario por CPF e Email
+      description: Verifica a existencia e status de um usuario baseado no CPF e Email, retornando seus dados basicos se encontrado e ativo.
+      tags:
+        - Usuarios
+        - Verificacoes
+      parameters:
+        - name: CIDADE
+          in: query
+          required: true
+          description: Identificador da cidade.
+          schema:
+            type: string
+            example: "PIRACICABA"
+        - name: CPFUSR
+          in: query
+          required: true
+          description: CPF do usuario a ser validado.
+          schema:
+            type: string
+            format: cpf
+            example: "99988877766"
+        - name: EMAIL
+          in: query
+          required: true
+          description: Email do usuario a ser validado.
+          schema:
+            type: string
+            format: email
+            example: "validar.usuario@email.com"
+      responses:
+        200:
+          description: Sucesso. Usuario encontrado e ativo. Retorna dados de confirmacao.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  Confirma:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        CPFUSR:
+                          type: string
+                          format: cpf
+                        SENHA:
+                          type: string
+                          description: "Campo SENHA (geralmente vazio ou hash na resposta)"
+                        FILIAL:
+                          type: string
+                        CODCLI:
+                          type: string
+                        CODINT:
+                          type: string
+                        CODEMP:
+                          type: string
+                        MATRIC:
+                          type: string
+                        TIPREG:
+                          type: string
+                        TIPUSU:
+                          type: string
+                        DATBLO:
+                          type: string
+                          description: "Data de bloqueio (vazio se ativo)"
+                        SITUSR:
+                          type: integer
+                          description: "Situacao do usuario (1 = ativo)"
+                        EMAIL:
+                          type: string
+                          format: email
+                        MATRICULACOMPLETA:
+                          type: string
+                          description: "Matricula completa formatada"
+        404:
+          description: Usuario nao encontrado ou inativo para os dados fornecidos.
+        400:
+          description: Erro na requisicao.
+        500:
+          description: Erro interno do servidor.
+
+
+
+  /loginsite/:
+    get:
+      summary: Login Site (Alternativo)
+      description: Endpoint alternativo para autenticacao de usuario, similar ao /Autentica.
+      tags:
+        - Autenticacao
+      parameters:
+        - name: CIDADE
+          in: query
+          required: true
+          description: Identificador da cidade.
+          schema:
+            type: string
+            example: "ASBONO"
+        - name: CPFUSR
+          in: query
+          required: true
+          description: CPF do usuario.
+          schema:
+            type: string
+            format: cpf
+            example: "12312312312"
+        - name: USRSENHA
+          in: query
+          required: true
+          description: Senha do usuario.
+          schema:
+            type: string
+            format: password
+            example: "outraSenha1"
+      responses:
+        200:
+          description: Login bem-sucedido. Retorna dados do usuario.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  login_status:
+                    type: string
+                    example: "success"
+                  user_data:
+                    type: object
+                    properties: {}
+        401:
+          description: Nao autorizado. Credenciais invalidas.
+        400:
+          description: Erro na requisicao.
+        500:
+          description: Erro interno do servidor.
+
+
+
+  /boletolista/:
+    get:
+      summary: Lista Boletos por Matricula
+      description: Retorna a lista de boletos (faturas) associados a uma matricula completa em uma cidade.
+      tags:
+        - Financeiro
+        - Boletos
+      parameters:
+        - name: CIDADE
+          in: query
+          required: true
+          description: Identificador da cidade.
+          schema:
+            type: string
+            example: "ASBONO"
+        - name: MATRICULA
+          in: query
+          required: true
+          description: Matricula completa do associado (formato CODINT+CODEMP+MATRIC+TIPREG+DIGITO).
+          schema:
+            type: string
+            example: "00010001123456010"
+      responses:
+        200:
+          description: Sucesso. Retorna a lista de boletos.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  boletos:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        data_vencimento:
+                          type: string
+                          format: date
+                        id_documento:
+                          type: string
+                          description: "Chave do titulo (Prefixo+Num+Parcela+Tipo)"
+                        id_cliente:
+                          type: string
+                          description: "Codigo+Loja do cliente"
+                        valor:
+                          type: number
+                          format: float
+                        situacao:
+                          type: string
+                          enum: [PENDENTE, PAGA, VENCIDA]
+                        situacao_id:
+                          type: string
+                          enum: ["1", "2", "3"]
+        400:
+          description: Erro na requisicao (ex familia/cliente nao encontrado).
+        500:
+          description: Erro interno do servidor.
+
+
+
+  /boletofatura/:
+    get:
+      summary: Obtem Fatura de Boleto em PDF
+      description: Retorna um arquivo PDF da fatura (boleto) com dados para pagamento, codificado em base64 dentro de um JSON.
+      tags:
+        - Financeiro
+        - Boletos
+      parameters:
+        - name: CIDADE
+          in: query
+          required: true
+          description: Identificador da cidade.
+          schema:
+            type: string
+            example: "ASBONO"
+        - name: BOLETOCHAVE
+          in: query
+          required: true
+          description: Chave completa do boleto (Prefixo+Num+Parcela+Tipo).
+          schema:
+            type: string
+            example: "BOL12345678A NF"
+      responses:
+        200:
+          description: Sucesso. Retorna JSON com o nome e o binario (base64) do PDF da fatura.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  arquivo_nome:
+                    type: string
+                    description: "Nome do arquivo PDF gerado."
+                    example: "boleto_123.pdf"
+                  arquivo_path:
+                    type: string
+                    description: "Caminho onde o arquivo foi gerado no servidor (informativo)."
+                  arquivo_binario:
+                    type: string
+                    format: byte
+                    description: "Conteudo do arquivo PDF em formato base64."
+        400:
+          description: Erro na requisicao (ex boleto nao encontrado).
+        500:
+          description: Erro interno do servidor.
